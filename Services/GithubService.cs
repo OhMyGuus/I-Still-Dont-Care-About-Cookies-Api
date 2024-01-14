@@ -60,21 +60,8 @@ public class GithubService : IGithubService
 
     private async Task<string> CreateNewIssue(ReportModel report, string browser)
     {
-        string? _projectOutputDirectory = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
-        string nsfwHostnamesFileLocation = _projectOutputDirectory += "/data/nsfw_hosts.txt";
 
-        var nsfwHostnames = File.ReadLines(nsfwHostnamesFileLocation);
-        bool isNSFW = false;
-
-        foreach (string hostname in nsfwHostnames)
-        {
-            if (hostname == report.Hostname)
-            {
-                isNSFW = true;
-                break;
-            }
-        }
-
+        bool isNSFW = CheckForNSFW(report.Hostname);
         var createIssue = new NewIssue($"[REQ] {report.Hostname}");
 
         if (isNSFW)
@@ -109,6 +96,20 @@ public class GithubService : IGithubService
             var closedIssues = await _githubClient.Search.SearchIssues(new SearchIssuesRequest($"repo:{_repoOwner}/{_repoName} {site} is:issue is:closed"));
             return closedIssues.Items.LastOrDefault(o => IssueVersionCheck(o, version));
         }
+    }
+
+    private static bool CheckForNSFW(string reportHostname)
+    {
+        string? _projectOutputDirectory = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
+        string nsfwHostnamesFileLocation = _projectOutputDirectory += "/data/nsfw_hosts.txt";
+
+        var nsfwHostnames = File.ReadLines(nsfwHostnamesFileLocation);
+
+        foreach (string hostname in nsfwHostnames)
+            if (hostname == reportHostname)
+                return true;
+
+        return false;
     }
 
     private static bool IssueVersionCheck(Issue issue, Version currentVersion)
