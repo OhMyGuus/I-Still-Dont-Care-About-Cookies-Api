@@ -39,7 +39,7 @@ If you use VSCode/VSCodium/VS, we recommend installing the [.NET Core User Secre
     "GithubConfiguration": {
         "RepoOwner": "Your GitHub username here",
         "RepoName": "I-Still-Dont-Care-About-Cookies",
-        "Token": "Your personal GitHub token "
+        "Token": "Your personal GitHub token"
     }
 }
 ```
