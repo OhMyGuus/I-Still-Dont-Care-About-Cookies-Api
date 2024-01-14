@@ -60,14 +60,32 @@ public class GithubService : IGithubService
 
     private async Task<string> CreateNewIssue(ReportModel report, string browser)
     {
+        string? _projectOutputDirectory = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
+        string nsfwHostnamesFileLocation = _projectOutputDirectory += "/data/nsfw_hosts.txt";
+
+        var nsfwHostnames = File.ReadLines(nsfwHostnamesFileLocation);
+        bool isNSFW = false;
+
+        foreach (string hostname in nsfwHostnames)
+        {
+            if (hostname == report.Hostname)
+            {
+                isNSFW = true;
+                break;
+            }
+        }
+
         var createIssue = new NewIssue($"[REQ] {report.Hostname}");
+
+        if (isNSFW)
+            createIssue.Labels.Add("NSFW");
 
         if (report.IssueType != IssueType.General)
         {
             createIssue.Labels.Add(report.IssueType.ToString());
         }
 
-        createIssue.Body = $"Someone reported anonymously: \r\n  ### Website URL\r\n\r\nhttps://{report.Hostname}\r\n\r\n### What browser are u using?\r\n\r\n{browser}\r\n\r\n### Version\r\n\r\n{report.ExtensionVersion}\r\n\r\n### Issue type\r\n\r\n{report.IssueType}\r\n\r\n### Notes\r\n\r\n{report.Notes}";
+        createIssue.Body = $"Someone reported anonymously: \r\n  ### Website URL\r\n\r\n{(isNSFW ? "🔴 NSFW\n" : "")}https://{report.Hostname}\r\n\r\n### What browser are u using?\r\n\r\n{browser}\r\n\r\n### Version\r\n\r\n{report.ExtensionVersion}\r\n\r\n### Issue type\r\n\r\n{report.IssueType}\r\n\r\n### Notes\r\n\r\n{report.Notes}";
 
         createIssue.Assignees.Add(_repoOwner);
         createIssue.Labels.Add("Website request");
