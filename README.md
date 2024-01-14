@@ -17,7 +17,7 @@ _Install the .NET SDK and ASP.NET runtime_
 pacman -S dotnet-sdk aspnet-runtime
 ```
 _or_
-```bash
+```
 yay -S dotnet-sdk aspnet-runtime
 ```
 
