@@ -61,7 +61,7 @@ public class GithubService : IGithubService
     private async Task<string> CreateNewIssue(ReportModel report, string browser)
     {
 
-        bool isNSFW = CheckForNSFW(report.Hostname);
+        bool isNSFW = NSFWCheck(report.Hostname);
         var createIssue = new NewIssue($"[REQ] {report.Hostname}");
 
         if (isNSFW)
@@ -98,7 +98,7 @@ public class GithubService : IGithubService
         }
     }
 
-    private static bool CheckForNSFW(string reportHostname)
+    private static bool NSFWCheck(string reportHostname)
     {
         string? _projectOutputDirectory = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
         string nsfwHostnamesFileLocation = _projectOutputDirectory += "/data/nsfw_hosts.txt";
