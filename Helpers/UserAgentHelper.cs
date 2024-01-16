@@ -1,6 +1,7 @@
 ﻿using MyCSharp.HttpUserAgentParser;
 
 namespace IStillDontCareAboutCookies.Api.Helpers;
+
 public static class UserAgentHelper
 {
     public static string GetBrowser(this IHeaderDictionary headers)
