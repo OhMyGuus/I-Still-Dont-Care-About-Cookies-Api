@@ -74,7 +74,7 @@ public class GithubService : IGithubService
             createIssue.Labels.Add(report.IssueType.ToString());
         }
 
-        createIssue.Body = "Someone reported anonymously: \r\n  ";
+        createIssue.Body = "Someone reported anonymously: \r\n";
         createIssue.Body += $"### Website URL\r\n\r\n{(isNSFW ? "🔴 NSFW\n" : "")}https://{report.Hostname}\r\n\r\n";
         createIssue.Body += $"### What browser are u using?\r\n\r\n{browser}\r\n\r\n";
         createIssue.Body += $"### Version\r\n\r\n{report.ExtensionVersion}\r\n\r\n";
