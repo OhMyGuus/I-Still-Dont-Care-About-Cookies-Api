@@ -16,7 +16,7 @@ public class NSFWChecker : INSFWChecker
     public async Task<HashSet<string>> FetchList()
     {
         using HttpClient httpClient = new();
-        var response = await httpClient.GetStringAsync(_nsfwListUrl);
+        string response = await httpClient.GetStringAsync(_nsfwListUrl);
 
         return new HashSet<string>(response.Split("\n"));
     }

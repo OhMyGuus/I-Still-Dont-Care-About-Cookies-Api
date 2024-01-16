@@ -60,7 +60,7 @@ public class GithubService : IGithubService
 
     private async Task<string> CreateNewIssue(ReportModel report, string browser)
     {
-        var nsfwChecker = new NSFWChecker();
+        NSFWChecker nsfwChecker = new();
         bool isNSFW = nsfwChecker.IsHostnameNSFW(report.Hostname);
 
         var createIssue = new NewIssue($"[REQ] {report.Hostname}");
