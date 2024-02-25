@@ -1,10 +1,14 @@
-﻿namespace IStillDontCareAboutCookies.Api.Helpers;
+﻿using MyCSharp.HttpUserAgentParser;
+
+namespace IStillDontCareAboutCookies.Api.Helpers;
+
 public static class UserAgentHelper
 {
     public static string GetBrowser(this IHeaderDictionary headers)
     {
-        var parsed = UAParser.Parser.GetDefault().Parse(headers.UserAgent);
-        return $"{parsed.UA.Family} {parsed.UA.Major}";
-    }
+        string userAgent = headers.UserAgent.ToString();
+        HttpUserAgentInformation parsed = HttpUserAgentParser.Parse(userAgent);
 
+        return $"{parsed.Name} {parsed.Version}";
+    }
 }

@@ -6,7 +6,7 @@
 
 </div>
 
-This is the ASP.NET API for the _[I Still Dont Care About Cookies](https://github.com/OhMyGuus/I-Still-Dont-Care-About-Cookies)_ extension. It uses .NET 8.0 as a target framework, and also makes use of [Octokit](https://github.com/octokit/octokit.net), [Swashbuckle](https://github.com/domaindrivendev/Swashbuckle.AspNetCore) and [UAParser](https://github.com/ua-parser/uap-csharp) as package dependencies. Currently, this API is used for anonymous reports.
+This is the ASP.NET API for the _[I Still Dont Care About Cookies](https://github.com/OhMyGuus/I-Still-Dont-Care-About-Cookies)_ extension. It uses .NET 8.0 as a target framework, and also makes use of [Octokit](https://github.com/octokit/octokit.net), [Swashbuckle](https://github.com/domaindrivendev/Swashbuckle.AspNetCore) and [HttpUserAgentParser](https://github.com/mycsharp/HttpUserAgentParser) as package dependencies. Currently, this API is used for anonymous reports.
 
 ## Building
 ### Linux (Arch)
