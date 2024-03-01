@@ -34,4 +34,4 @@ jobs:
           
       - name: Publish and push the container image
         run: |
-          dotnet publish --os linux --arch x64 -c Release /p:PublishProfile=gith
+          dotnet publish --os linux --arch x64 -c Release /p:PublishProfile=github
