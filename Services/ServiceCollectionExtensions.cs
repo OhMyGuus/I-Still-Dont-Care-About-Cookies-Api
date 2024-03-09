@@ -8,6 +8,7 @@ public static class ServiceCollectionExtensions
     {
         services.Configure<GithubConfiguration>(configuration.GetSection(GithubConfiguration.ConfigurationKey));
         services.AddScoped<IReportService, ReportService>();
+        services.AddScoped<INSFWChecker, NSFWChecker>();
         services.AddScoped<IGithubService, GithubService>();
         return services;
     }
