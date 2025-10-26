@@ -10,12 +10,14 @@ public class GithubService : IGithubService
 {
     private readonly GithubConfiguration _githubConfiguration;
     private readonly GitHubClient _githubClient;
+    private readonly INSFWChecker _nsfwChecker;
     private readonly string _repoOwner = "";
     private readonly string _repoName = "";
 
-    public GithubService(IOptions<GithubConfiguration> githubConfiguration)
+    public GithubService(IOptions<GithubConfiguration> githubConfiguration, INSFWChecker nsfwChecker)
     {
         _githubConfiguration = githubConfiguration.Value;
+        _nsfwChecker = nsfwChecker;
         _githubClient = new GitHubClient(new ProductHeaderValue("IStillDontCareAboutCookiesApi"));
         _githubClient.Credentials = new Credentials(_githubConfiguration.Token);
         _repoName = _githubConfiguration.RepoName;
@@ -60,14 +62,24 @@ public class GithubService : IGithubService
 
     private async Task<string> CreateNewIssue(ReportModel report, string browser)
     {
+        bool isNSFW = _nsfwChecker.IsHostnameNSFW(report.Hostname);
+
         var createIssue = new NewIssue($"[REQ] {report.Hostname}");
+
+        if (isNSFW)
+            createIssue.Labels.Add("NSFW");
 
         if (report.IssueType != IssueType.General)
         {
             createIssue.Labels.Add(report.IssueType.ToString());
         }
 
-        createIssue.Body = $"Someone reported anonymously: \r\n  ### Website URL\r\n\r\nhttps://{report.Hostname}\r\n\r\n### What browser are u using?\r\n\r\n{browser}\r\n\r\n### Version\r\n\r\n{report.ExtensionVersion}\r\n\r\n### Issue type\r\n\r\n{report.IssueType}\r\n\r\n### Notes\r\n\r\n{report.Notes}";
+        createIssue.Body = "Someone reported anonymously: \r\n";
+        createIssue.Body += $"### Website URL\r\n\r\n{(isNSFW ? "🔴 NSFW\n" : "")}https://{report.Hostname}\r\n\r\n";
+        createIssue.Body += $"### What browser are u using?\r\n\r\n{browser}\r\n\r\n";
+        createIssue.Body += $"### Version\r\n\r\n{report.ExtensionVersion}\r\n\r\n";
+        createIssue.Body += $"### Issue type\r\n\r\n{report.IssueType}\r\n\r\n";
+        createIssue.Body += $"### Notes\r\n\r\n{report.Notes}";
 
         createIssue.Assignees.Add(_repoOwner);
         createIssue.Labels.Add("Website request");
