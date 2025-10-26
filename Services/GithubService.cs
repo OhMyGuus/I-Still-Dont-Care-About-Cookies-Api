@@ -10,12 +10,14 @@ public class GithubService : IGithubService
 {
     private readonly GithubConfiguration _githubConfiguration;
     private readonly GitHubClient _githubClient;
+    private readonly INSFWChecker _nsfwChecker;
     private readonly string _repoOwner = "";
     private readonly string _repoName = "";
 
-    public GithubService(IOptions<GithubConfiguration> githubConfiguration)
+    public GithubService(IOptions<GithubConfiguration> githubConfiguration, INSFWChecker nsfwChecker)
     {
         _githubConfiguration = githubConfiguration.Value;
+        _nsfwChecker = nsfwChecker;
         _githubClient = new GitHubClient(new ProductHeaderValue("IStillDontCareAboutCookiesApi"));
         _githubClient.Credentials = new Credentials(_githubConfiguration.Token);
         _repoName = _githubConfiguration.RepoName;
@@ -60,8 +62,7 @@ public class GithubService : IGithubService
 
     private async Task<string> CreateNewIssue(ReportModel report, string browser)
     {
-        NSFWChecker nsfwChecker = new();
-        bool isNSFW = nsfwChecker.IsHostnameNSFW(report.Hostname);
+        bool isNSFW = _nsfwChecker.IsHostnameNSFW(report.Hostname);
 
         var createIssue = new NewIssue($"[REQ] {report.Hostname}");
 
