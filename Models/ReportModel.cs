@@ -31,7 +31,16 @@ public class ReportModel
 
     public Uri? GetUri()
     {
-        return Uri.TryCreate(URL, UriKind.Absolute, out var uri) ? uri : null;
+        var url = URL;
+
+        // Add https:// if no scheme is present
+        if (!url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+            !url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            url = "https://" + url;
+        }
+
+        return Uri.TryCreate(url, UriKind.Absolute, out var uri) ? uri : null;
     }
 }
 
