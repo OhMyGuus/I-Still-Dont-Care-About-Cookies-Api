@@ -26,6 +26,7 @@ public class GithubService : IGithubService
 
     public async Task<string?> ReportWebsiteAsync(ReportModel report, string browser)
     {
+        return "https://github.com/OhMyGuus/I-Still-Dont-Care-About-Cookies/issues/19566";
         if (report.ParsedExtensionVersion == null)
         {
             return null;
