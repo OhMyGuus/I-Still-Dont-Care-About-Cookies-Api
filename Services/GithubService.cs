@@ -3,6 +3,7 @@ using IStillDontCareAboutCookies.Api.Models.Configuration;
 using IStillDontCareAboutCookies.Api.Services.Interfaces;
 using Microsoft.Extensions.Options;
 using Octokit;
+using GitHubJwt;
 
 namespace IStillDontCareAboutCookies.Api.Services;
 
@@ -13,19 +14,91 @@ public class GithubService : IGithubService
     private readonly INSFWChecker _nsfwChecker;
     private readonly string _repoOwner = "";
     private readonly string _repoName = "";
+    private readonly bool _useGitHubApp;
+    private readonly SemaphoreSlim _tokenRefreshLock = new(1, 1);
+    private DateTimeOffset _tokenExpiresAt = DateTimeOffset.MinValue;
 
     public GithubService(IOptions<GithubConfiguration> githubConfiguration, INSFWChecker nsfwChecker)
     {
         _githubConfiguration = githubConfiguration.Value;
         _nsfwChecker = nsfwChecker;
         _githubClient = new GitHubClient(new ProductHeaderValue("IStillDontCareAboutCookiesApi"));
-        _githubClient.Credentials = new Credentials(_githubConfiguration.Token);
+
+        // Determine authentication method
+        _useGitHubApp = _githubConfiguration.AppId.HasValue &&
+                        !string.IsNullOrEmpty(_githubConfiguration.PrivateKey) &&
+                        _githubConfiguration.InstallationId.HasValue;
+
+        if (_useGitHubApp)
+        {
+            // Initial token will be generated on first API call
+            RefreshGitHubAppCredentialsAsync().Wait();
+        }
+        else
+        {
+            _githubClient.Credentials = new Credentials(_githubConfiguration.Token);
+        }
+
         _repoName = _githubConfiguration.RepoName;
         _repoOwner = _githubConfiguration.RepoOwner;
     }
 
+    private async Task EnsureValidTokenAsync()
+    {
+        if (!_useGitHubApp)
+            return;
+
+        // Refresh token if it expires in less than 5 minutes
+        if (DateTimeOffset.UtcNow.AddMinutes(5) >= _tokenExpiresAt)
+        {
+            await RefreshGitHubAppCredentialsAsync();
+        }
+    }
+
+    private async Task RefreshGitHubAppCredentialsAsync()
+    {
+        await _tokenRefreshLock.WaitAsync();
+        try
+        {
+            // Double-check after acquiring lock
+            if (DateTimeOffset.UtcNow.AddMinutes(5) < _tokenExpiresAt)
+                return;
+
+            // Generate JWT token for GitHub App authentication
+            var generator = new GitHubJwtFactory(
+                new StringPrivateKeySource(_githubConfiguration.PrivateKey!),
+                new GitHubJwtFactoryOptions
+                {
+                    AppIntegrationId = _githubConfiguration.AppId!.Value,
+                    ExpirationSeconds = 600 // 10 minutes (maximum allowed)
+                }
+            );
+
+            var jwtToken = generator.CreateEncodedJwtToken();
+
+            // Create a client authenticated as the GitHub App
+            var appClient = new GitHubClient(new ProductHeaderValue("IStillDontCareAboutCookiesApi"))
+            {
+                Credentials = new Credentials(jwtToken, AuthenticationType.Bearer)
+            };
+
+            // Create installation token
+            var installationToken = await appClient.GitHubApps.CreateInstallationToken(_githubConfiguration.InstallationId!.Value);
+
+            // Update credentials and expiration time
+            _githubClient.Credentials = new Credentials(installationToken.Token);
+            _tokenExpiresAt = installationToken.ExpiresAt;
+        }
+        finally
+        {
+            _tokenRefreshLock.Release();
+        }
+    }
+
     public async Task<string?> ReportWebsiteAsync(ReportModel report, string browser)
     {
+        await EnsureValidTokenAsync();
+
         if (report.ParsedExtensionVersion == null)
         {
             return null;
@@ -92,6 +165,8 @@ public class GithubService : IGithubService
 
     public async Task<Issue?> FindExistingIssue(string site, Version version)
     {
+        await EnsureValidTokenAsync();
+
         var openIssues = await _githubClient.Search.SearchIssues(new SearchIssuesRequest($"repo:{_repoOwner}/{_repoName} {site} is:issue is:open"));
 
         if (openIssues.Items.Any())

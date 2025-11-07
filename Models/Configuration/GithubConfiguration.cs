@@ -5,5 +5,8 @@ public class GithubConfiguration
     public string RepoOwner { get; set; } = "OhMyGuus";
     public string RepoName { get; set; } = "I-Dont-Care-About-Cookies";
     public string Token { get; set; } = "";
+    public int? AppId { get; set; }
+    public string? PrivateKey { get; set; }
+    public long? InstallationId { get; set; }
 
 }
